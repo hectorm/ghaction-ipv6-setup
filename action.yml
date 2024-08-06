@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: "Enable IPv6"
+description: "Enable IPv6"
+runs:
+  using: "composite"
+  steps:
+    - shell: "bash"
+      run: |
+        sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+        sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
+    - shell: "bash"
+      run: |
+        [ -e /etc/docker/ ] || sudo mkdir /etc/docker/
+        [ -e /etc/docker/daemon.json ] || printf '{}' | sudo tee /etc/docker/daemon.json >/dev/null
+        jq '.ipv6 = true | ."fixed-cidr-v6" = "fd00:d00c::/64" | .experimental = true' < /etc/docker/daemon.json | sudo tee /etc/docker/daemon.new.json >/dev/null
+        sudo mv -f /etc/docker/daemon.new.json /etc/docker/daemon.json
+        sudo systemctl try-restart docker.service
