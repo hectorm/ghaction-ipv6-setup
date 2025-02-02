@@ -13,6 +13,7 @@ runs:
         [ -e /etc/docker/ ] || sudo mkdir /etc/docker/
         [ -e /etc/docker/daemon.json ] || printf '{}' | sudo tee /etc/docker/daemon.json >/dev/null
         jq '
+          ."experimental" = true |
           ."ipv6" = true |
           ."iptables" = true |
           ."ip6tables" = true |
