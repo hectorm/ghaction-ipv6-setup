@@ -12,6 +12,17 @@ runs:
       run: |
         [ -e /etc/docker/ ] || sudo mkdir /etc/docker/
         [ -e /etc/docker/daemon.json ] || printf '{}' | sudo tee /etc/docker/daemon.json >/dev/null
-        jq '.ipv6 = true | ."fixed-cidr-v6" = "fd00:d00c::/64" | .experimental = true' < /etc/docker/daemon.json | sudo tee /etc/docker/daemon.new.json >/dev/null
+        jq '
+          ."ipv6" = true |
+          ."iptables" = true |
+          ."ip6tables" = true |
+          ."bip" = "172.17.0.1/24" |
+          ."fixed-cidr" = "172.17.0.0/24" |
+          ."fixed-cidr-v6" = "fd00:d00c::/64" |
+          ."default-address-pools" = [
+            { "base": "172.17.0.0/16", "size": 24 },
+            { "base": "fd00:d00c::/48", "size": 64 }
+          ]
+        ' < /etc/docker/daemon.json | sudo tee /etc/docker/daemon.new.json >/dev/null
         sudo mv -f /etc/docker/daemon.new.json /etc/docker/daemon.json
         sudo systemctl try-restart docker.service
